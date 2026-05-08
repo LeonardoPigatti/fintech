@@ -13,6 +13,7 @@ import com.fintech.banking.repository.TransactionRepository;
 import com.fintech.banking.repository.UserRepository;
 import com.fintech.banking.service.TransactionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -65,11 +66,11 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "accounts", key = "#email")
     public TransactionResponse deposit(String email, TransactionRequest request) {
         Account account = getAccountByEmail(email);
         account.credit(request.getAmount());
         accountRepository.save(account);
-
         Transaction transaction = transactionRepository.save(Transaction.builder()
                 .targetAccount(account)
                 .amount(request.getAmount())
@@ -77,18 +78,17 @@ public class TransactionServiceImpl implements TransactionService {
                 .status(TransactionStatus.COMPLETED)
                 .description(request.getDescription())
                 .build());
-
         publishEvent(transaction);
         return toResponse(transaction);
     }
 
     @Override
     @Transactional
+    @CacheEvict(value = "accounts", key = "#email")
     public TransactionResponse withdraw(String email, TransactionRequest request) {
         Account account = getAccountByEmail(email);
         account.debit(request.getAmount());
         accountRepository.save(account);
-
         Transaction transaction = transactionRepository.save(Transaction.builder()
                 .sourceAccount(account)
                 .amount(request.getAmount())
@@ -96,23 +96,21 @@ public class TransactionServiceImpl implements TransactionService {
                 .status(TransactionStatus.COMPLETED)
                 .description(request.getDescription())
                 .build());
-
         publishEvent(transaction);
         return toResponse(transaction);
     }
 
     @Override
     @Transactional
+    @CacheEvict(value = "accounts", key = "#email")
     public TransactionResponse transfer(String email, TransactionRequest request) {
         Account source = getAccountByEmail(email);
         Account target = accountRepository.findByNumber(request.getTargetAccountNumber())
                 .orElseThrow(() -> new IllegalArgumentException("Conta destino não encontrada"));
-
         source.debit(request.getAmount());
         target.credit(request.getAmount());
         accountRepository.save(source);
         accountRepository.save(target);
-
         Transaction transaction = transactionRepository.save(Transaction.builder()
                 .sourceAccount(source)
                 .targetAccount(target)
@@ -121,7 +119,6 @@ public class TransactionServiceImpl implements TransactionService {
                 .status(TransactionStatus.COMPLETED)
                 .description(request.getDescription())
                 .build());
-
         publishEvent(transaction);
         return toResponse(transaction);
     }

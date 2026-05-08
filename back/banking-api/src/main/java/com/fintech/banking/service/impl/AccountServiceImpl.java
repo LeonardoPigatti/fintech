@@ -6,8 +6,12 @@ import com.fintech.banking.repository.AccountRepository;
 import com.fintech.banking.repository.UserRepository;
 import com.fintech.banking.service.AccountService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AccountServiceImpl implements AccountService {
@@ -16,7 +20,9 @@ public class AccountServiceImpl implements AccountService {
     private final UserRepository userRepository;
 
     @Override
+    @Cacheable(value = "accounts", key = "#email")
     public AccountResponse getMyAccount(String email) {
+        log.info("[CACHE] Cache miss - loading account from database for: {}", email);
         var user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
 
@@ -36,5 +42,11 @@ public class AccountServiceImpl implements AccountService {
                 .ownerName(user.getName())
                 .createdAt(account.getCreatedAt())
                 .build();
+    }
+
+    @Override
+    @CacheEvict(value = "accounts", key = "#email")
+    public void evictAccountCache(String email) {
+        log.info("[CACHE] Evicting account cache for: {}", email);
     }
 }
