@@ -39,9 +39,11 @@ public class User implements UserDetails {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private UserRole role;
+    @Builder.Default
+    private UserRole role = UserRole.USER;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean active = true;
 
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -62,7 +64,6 @@ public class User implements UserDetails {
         updatedAt = LocalDateTime.now();
     }
 
-    // UserDetails
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));

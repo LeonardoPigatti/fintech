@@ -32,11 +32,13 @@ public class Account {
     private String number;
 
     @Column(nullable = false, precision = 19, scale = 2)
+    @Builder.Default
     private BigDecimal balance = BigDecimal.ZERO;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private AccountStatus status;
+    @Builder.Default
+    private AccountStatus status = AccountStatus.ACTIVE;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
