@@ -6,6 +6,8 @@ import com.fintech.banking.domain.enums.TransactionStatus;
 import com.fintech.banking.domain.enums.TransactionType;
 import com.fintech.banking.dto.request.TransactionRequest;
 import com.fintech.banking.dto.response.TransactionResponse;
+import com.fintech.banking.kafka.TransactionEvent;
+import com.fintech.banking.kafka.TransactionEventProducer;
 import com.fintech.banking.repository.AccountRepository;
 import com.fintech.banking.repository.TransactionRepository;
 import com.fintech.banking.repository.UserRepository;
@@ -14,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,6 +27,7 @@ public class TransactionServiceImpl implements TransactionService {
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
     private final UserRepository userRepository;
+    private final TransactionEventProducer eventProducer;
 
     private Account getAccountByEmail(String email) {
         var user = userRepository.findByEmail(email)
@@ -46,6 +50,19 @@ public class TransactionServiceImpl implements TransactionService {
                 .build();
     }
 
+    private void publishEvent(Transaction t) {
+        eventProducer.publish(TransactionEvent.builder()
+                .transactionId(t.getId())
+                .type(t.getType())
+                .status(t.getStatus())
+                .amount(t.getAmount())
+                .description(t.getDescription())
+                .sourceAccountNumber(t.getSourceAccount() != null ? t.getSourceAccount().getNumber() : null)
+                .targetAccountNumber(t.getTargetAccount() != null ? t.getTargetAccount().getNumber() : null)
+                .occurredAt(LocalDateTime.now())
+                .build());
+    }
+
     @Override
     @Transactional
     public TransactionResponse deposit(String email, TransactionRequest request) {
@@ -53,15 +70,16 @@ public class TransactionServiceImpl implements TransactionService {
         account.credit(request.getAmount());
         accountRepository.save(account);
 
-        Transaction transaction = Transaction.builder()
+        Transaction transaction = transactionRepository.save(Transaction.builder()
                 .targetAccount(account)
                 .amount(request.getAmount())
                 .type(TransactionType.DEPOSIT)
                 .status(TransactionStatus.COMPLETED)
                 .description(request.getDescription())
-                .build();
+                .build());
 
-        return toResponse(transactionRepository.save(transaction));
+        publishEvent(transaction);
+        return toResponse(transaction);
     }
 
     @Override
@@ -71,15 +89,16 @@ public class TransactionServiceImpl implements TransactionService {
         account.debit(request.getAmount());
         accountRepository.save(account);
 
-        Transaction transaction = Transaction.builder()
+        Transaction transaction = transactionRepository.save(Transaction.builder()
                 .sourceAccount(account)
                 .amount(request.getAmount())
                 .type(TransactionType.WITHDRAWAL)
                 .status(TransactionStatus.COMPLETED)
                 .description(request.getDescription())
-                .build();
+                .build());
 
-        return toResponse(transactionRepository.save(transaction));
+        publishEvent(transaction);
+        return toResponse(transaction);
     }
 
     @Override
@@ -94,16 +113,17 @@ public class TransactionServiceImpl implements TransactionService {
         accountRepository.save(source);
         accountRepository.save(target);
 
-        Transaction transaction = Transaction.builder()
+        Transaction transaction = transactionRepository.save(Transaction.builder()
                 .sourceAccount(source)
                 .targetAccount(target)
                 .amount(request.getAmount())
                 .type(TransactionType.TRANSFER)
                 .status(TransactionStatus.COMPLETED)
                 .description(request.getDescription())
-                .build();
+                .build());
 
-        return toResponse(transactionRepository.save(transaction));
+        publishEvent(transaction);
+        return toResponse(transaction);
     }
 
     @Override
