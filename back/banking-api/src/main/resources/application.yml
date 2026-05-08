@@ -18,7 +18,6 @@ spring:
     show-sql: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
 
   flyway:
@@ -43,12 +42,20 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
-        spring.json.trusted.packages: "com.fintech.banking.*"
+        spring.json.trusted.packages: com.fintech.banking.*
 
 server:
   port: 8080
   servlet:
     context-path: /api/v1
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    disable-swagger-default-url: true
+  use-management-port: false
 
 management:
   endpoints:
@@ -60,9 +67,9 @@ management:
       show-details: always
 
 jwt:
-  secret: "sua-chave-secreta-super-segura-aqui-minimo-256-bits-para-hs256"
-  expiration: 86400000       # 24h em ms
-  refresh-expiration: 604800000  # 7 dias em ms
+  secret: sua-chave-secreta-super-segura-aqui-minimo-256-bits-para-hs256
+  expiration: 86400000
+  refresh-expiration: 604800000
 
 logging:
   level:
