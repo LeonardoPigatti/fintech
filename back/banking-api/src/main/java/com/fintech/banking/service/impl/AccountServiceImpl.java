@@ -43,10 +43,4 @@ public class AccountServiceImpl implements AccountService {
                 .createdAt(account.getCreatedAt())
                 .build();
     }
-
-    @Override
-    @CacheEvict(value = "accounts", key = "#email")
-    public void evictAccountCache(String email) {
-        log.info("[CACHE] Evicting account cache for: {}", email);
-    }
 }
