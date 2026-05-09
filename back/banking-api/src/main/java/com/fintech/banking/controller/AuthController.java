@@ -1,6 +1,7 @@
 package com.fintech.banking.controller;
 
 import com.fintech.banking.dto.request.LoginRequest;
+import com.fintech.banking.dto.request.RefreshTokenRequest;
 import com.fintech.banking.dto.request.RegisterRequest;
 import com.fintech.banking.dto.response.TokenResponse;
 import com.fintech.banking.service.AuthService;
@@ -25,5 +26,16 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<TokenResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<TokenResponse> refresh(@Valid @RequestBody RefreshTokenRequest request) {
+        return ResponseEntity.ok(authService.refresh(request));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@Valid @RequestBody RefreshTokenRequest request) {
+        authService.logout(request);
+        return ResponseEntity.noContent().build();
     }
 }

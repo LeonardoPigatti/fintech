@@ -1,11 +1,14 @@
 package com.fintech.banking.service.impl;
 
 import com.fintech.banking.domain.entity.Account;
+import com.fintech.banking.domain.entity.RefreshToken;
 import com.fintech.banking.domain.entity.User;
 import com.fintech.banking.dto.request.LoginRequest;
+import com.fintech.banking.dto.request.RefreshTokenRequest;
 import com.fintech.banking.dto.request.RegisterRequest;
 import com.fintech.banking.dto.response.TokenResponse;
 import com.fintech.banking.repository.AccountRepository;
+import com.fintech.banking.repository.RefreshTokenRepository;
 import com.fintech.banking.repository.UserRepository;
 import com.fintech.banking.security.service.JwtService;
 import com.fintech.banking.service.AuditLogService;
@@ -20,7 +23,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.time.LocalDateTime;
 import java.util.Random;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +33,7 @@ public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
     private final AccountRepository accountRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
@@ -43,6 +49,26 @@ public class AuthServiceImpl implements AuthService {
             }
         } catch (Exception ignored) {}
         return "unknown";
+    }
+
+    private TokenResponse buildTokenResponse(User user) {
+        String accessToken = jwtService.generateToken(user);
+        String refreshTokenValue = UUID.randomUUID().toString();
+
+        RefreshToken refreshToken = RefreshToken.builder()
+                .user(user)
+                .token(refreshTokenValue)
+                .expiresAt(LocalDateTime.now().plusDays(7))
+                .build();
+
+        refreshTokenRepository.save(refreshToken);
+
+        return TokenResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshTokenValue)
+                .tokenType("Bearer")
+                .expiresIn(86400000L)
+                .build();
     }
 
     @Override
@@ -76,18 +102,11 @@ public class AuthServiceImpl implements AuthService {
 
         auditLogService.log(user.getEmail(), "REGISTER", "User", user.getId().toString(), "Novo usuário registrado", getClientIp());
 
-        String accessToken = jwtService.generateToken(user);
-        String refreshToken = jwtService.generateRefreshToken(user);
-
-        return TokenResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .tokenType("Bearer")
-                .expiresIn(86400000L)
-                .build();
+        return buildTokenResponse(user);
     }
 
     @Override
+    @Transactional
     public TokenResponse login(LoginRequest request) {
         try {
             authenticationManager.authenticate(
@@ -101,17 +120,43 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
 
+        refreshTokenRepository.revokeAllByUserId(user.getId());
+
         auditLogService.log(user.getEmail(), "LOGIN", "User", user.getId().toString(), "Login realizado", getClientIp());
 
-        String accessToken = jwtService.generateToken(user);
-        String refreshToken = jwtService.generateRefreshToken(user);
+        return buildTokenResponse(user);
+    }
 
-        return TokenResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .tokenType("Bearer")
-                .expiresIn(86400000L)
-                .build();
+    @Override
+    @Transactional
+    public TokenResponse refresh(RefreshTokenRequest request) {
+        RefreshToken refreshToken = refreshTokenRepository.findByToken(request.getRefreshToken())
+                .orElseThrow(() -> new IllegalArgumentException("Refresh token inválido"));
+
+        if (!refreshToken.isValid()) {
+            auditLogService.logFailure(refreshToken.getUser().getEmail(), "REFRESH_TOKEN", "Token expirado ou revogado", getClientIp());
+            throw new IllegalArgumentException("Refresh token expirado ou revogado");
+        }
+
+        refreshToken.setRevoked(true);
+        refreshTokenRepository.save(refreshToken);
+
+        User user = refreshToken.getUser();
+        auditLogService.log(user.getEmail(), "REFRESH_TOKEN", "User", user.getId().toString(), "Token renovado", getClientIp());
+
+        return buildTokenResponse(user);
+    }
+
+    @Override
+    @Transactional
+    public void logout(RefreshTokenRequest request) {
+        RefreshToken refreshToken = refreshTokenRepository.findByToken(request.getRefreshToken())
+                .orElseThrow(() -> new IllegalArgumentException("Refresh token inválido"));
+
+        refreshToken.setRevoked(true);
+        refreshTokenRepository.save(refreshToken);
+
+        auditLogService.log(refreshToken.getUser().getEmail(), "LOGOUT", "User", refreshToken.getUser().getId().toString(), "Logout realizado", getClientIp());
     }
 
     private String generateAccountNumber() {
