@@ -1,0 +1,18 @@
+import api from './client';
+
+export interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  cpf: string;
+  agency: string;
+  accountNumber: string;
+  createdAt: string;
+}
+
+export const userApi = {
+  getMe: async (): Promise<UserProfile> => {
+    const response = await api.get<UserProfile>('/users/me');
+    return response.data;
+  },
+};

@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { accountApi } from '../api/account';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { TrendingUp, TrendingDown, ArrowLeftRight, Copy, Send, Download, CreditCard, Zap, Plus } from 'lucide-react';
@@ -20,6 +21,8 @@ const mockCards = [
 ];
 
 export default function DashboardPage() {
+  const navigate = useNavigate();
+
   const { data: account, isLoading: accountLoading } = useQuery({
     queryKey: ['account'],
     queryFn: accountApi.getMyAccount,
@@ -63,10 +66,14 @@ export default function DashboardPage() {
               </button>
             </p>
             <div className='flex gap-3'>
-              <button className='flex-1 flex items-center justify-center gap-2 bg-white/20 hover:bg-white/30 text-white py-3 rounded-xl text-sm font-medium transition-all'>
+              <button
+                onClick={() => navigate('/transactions')}
+                className='flex-1 flex items-center justify-center gap-2 bg-white/20 hover:bg-white/30 text-white py-3 rounded-xl text-sm font-medium transition-all'>
                 <Send className='w-4 h-4' /> Send Money
               </button>
-              <button className='flex-1 flex items-center justify-center gap-2 bg-white/20 hover:bg-white/30 text-white py-3 rounded-xl text-sm font-medium transition-all'>
+              <button
+                onClick={() => navigate('/transactions')}
+                className='flex-1 flex items-center justify-center gap-2 bg-white/20 hover:bg-white/30 text-white py-3 rounded-xl text-sm font-medium transition-all'>
                 <Download className='w-4 h-4' /> Receive
               </button>
             </div>
@@ -122,10 +129,10 @@ export default function DashboardPage() {
         <div className='card p-6'>
           <div className='flex items-center justify-between mb-4'>
             <h3 className='font-semibold text-dark-800'>Recent Transactions</h3>
-            <button className='text-primary-500 text-sm font-medium hover:text-primary-600'>See all</button>
+            <button onClick={() => navigate('/history')} className='text-primary-500 text-sm font-medium hover:text-primary-600'>See all</button>
           </div>
           {transactions.length === 0 ? (
-            <p className='text-gray-400 text-sm text-center py-8'>Nenhuma transação ainda</p>
+            <p className='text-gray-400 text-sm text-center py-8'>No transactions yet</p>
           ) : (
             <div className='space-y-3'>
               {transactions.slice(0, 6).map(t => (
@@ -141,7 +148,7 @@ export default function DashboardPage() {
                     </div>
                     <div>
                       <p className='text-sm font-medium text-dark-800'>
-                        {t.type === 'DEPOSIT' ? 'Depósito' : t.type === 'WITHDRAWAL' ? 'Saque' : 'Transferência'}
+                        {t.type === 'DEPOSIT' ? 'Deposit' : t.type === 'WITHDRAWAL' ? 'Withdrawal' : 'Transfer'}
                       </p>
                       <p className='text-xs text-gray-400'>{formatDate(t.createdAt)}</p>
                     </div>
@@ -162,21 +169,21 @@ export default function DashboardPage() {
         {/* Quick Actions */}
         <div className='card p-6'>
           <div className='grid grid-cols-2 gap-3'>
-            <button className='flex flex-col items-center gap-2 p-4 rounded-xl bg-cream-100 hover:bg-primary-50 transition-colors card-hover'>
+            <button onClick={() => navigate('/cards')} className='flex flex-col items-center gap-2 p-4 rounded-xl bg-cream-100 hover:bg-primary-50 transition-colors card-hover'>
               <div className='w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm'>
                 <CreditCard className='w-5 h-5 text-primary-500' />
               </div>
               <span className='text-xs font-medium text-dark-800'>My Cards</span>
               <span className='text-xs text-gray-400'>2 Active</span>
             </button>
-            <button className='flex flex-col items-center gap-2 p-4 rounded-xl bg-cream-100 hover:bg-primary-50 transition-colors card-hover'>
+            <button onClick={() => navigate('/transactions')} className='flex flex-col items-center gap-2 p-4 rounded-xl bg-cream-100 hover:bg-primary-50 transition-colors card-hover'>
               <div className='w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm'>
                 <Zap className='w-5 h-5 text-primary-500' />
               </div>
               <span className='text-xs font-medium text-dark-800'>Pix Transfers</span>
               <span className='text-xs text-gray-400'>Quick Send</span>
             </button>
-            <button className='flex flex-col items-center gap-2 p-4 rounded-xl bg-cream-100 hover:bg-primary-50 transition-colors card-hover col-span-2'>
+            <button onClick={() => navigate('/invest')} className='flex flex-col items-center gap-2 p-4 rounded-xl bg-cream-100 hover:bg-primary-50 transition-colors card-hover col-span-2'>
               <div className='w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm'>
                 <TrendingUp className='w-5 h-5 text-primary-500' />
               </div>
@@ -232,7 +239,7 @@ export default function DashboardPage() {
             <div>
               <p className='text-xs text-gray-400'>My Pix Key</p>
               <p className='text-sm font-medium text-dark-800 truncate max-w-32'>
-                {account?.number || 'Carregando...'}
+                {account?.number || 'Loading...'}
               </p>
             </div>
             <button className='bg-primary-500 text-white text-xs font-medium px-3 py-2 rounded-lg hover:bg-primary-600 transition-colors'>

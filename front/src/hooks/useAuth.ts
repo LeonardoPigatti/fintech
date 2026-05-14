@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { authApi } from '../api/auth';
 import type { LoginRequest, RegisterRequest } from '../types';
 
+
 export function useAuth() {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'));
   const [userName, setUserName] = useState<string>(() => localStorage.getItem('userName') || '');
@@ -17,6 +18,17 @@ export function useAuth() {
       const response = await authApi.login(data);
       localStorage.setItem('token', response.accessToken);
       setToken(response.accessToken);
+
+      // Buscar nome do usuário pela conta
+      const accountResponse = await fetch('http://localhost:8080/api/v1/accounts/me', {
+        headers: { Authorization: `Bearer ${response.accessToken}` }
+      });
+      if (accountResponse.ok) {
+        const account = await accountResponse.json();
+        localStorage.setItem('userName', account.ownerName);
+        setUserName(account.ownerName);
+      }
+
       return true;
     } catch (err: any) {
       setError(err.response?.data?.error || 'Email ou senha inválidos');
@@ -32,7 +44,9 @@ export function useAuth() {
     try {
       const response = await authApi.register(data);
       localStorage.setItem('token', response.accessToken);
+      localStorage.setItem('userName', data.name);
       setToken(response.accessToken);
+      setUserName(data.name);
       return true;
     } catch (err: any) {
       setError(err.response?.data?.error || 'Erro ao criar conta');
