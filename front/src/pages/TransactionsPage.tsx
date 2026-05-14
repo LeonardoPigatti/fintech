@@ -5,13 +5,14 @@ import { userApi } from '../api/user';
 import { TrendingUp, TrendingDown, ArrowLeftRight, Loader2, CheckCircle, Zap, QrCode, Copy, Check } from 'lucide-react';
 import { formatCurrency } from '../utils/formatters';
 import { QRCodeSVG } from 'qrcode.react';
+import { useSearchParams } from 'react-router-dom';
 
 type TabType = 'deposit' | 'withdraw' | 'transfer' | 'pix' | 'qrcode';
 
 export default function TransactionsPage() {
   const queryClient = useQueryClient();
-  const [tab, setTab] = useState<TabType>('deposit');
-  const [amount, setAmount] = useState('');
+  const [searchParams] = useSearchParams();
+  const [tab, setTab] = useState<TabType>((searchParams.get('tab') as TabType) || 'deposit');  const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [targetAccount, setTargetAccount] = useState('');
   const [pixKey, setPixKey] = useState('');
