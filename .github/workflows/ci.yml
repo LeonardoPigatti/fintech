@@ -47,6 +47,10 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      - name: Give execute permission to mvnw
+        run: chmod +x mvnw
+        working-directory: back/banking-api
+
       - name: Build with Maven
         run: ./mvnw compile -q
         working-directory: back/banking-api
@@ -64,6 +68,4 @@ jobs:
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()
-        with:
-          name: test-results
-          path: back/banking-api/target/surefire-reports/
+        wit
