@@ -8,6 +8,8 @@ import TransactionsPage from './pages/TransactionsPage';
 import HistoryPage from './pages/HistoryPage';
 import ProfilePage from './pages/ProfilePage';
 import AnalyticsPage from './pages/AnalyticsPage';
+import CardsPage from './pages/CardsPage';
+
 
 
 
@@ -41,7 +43,7 @@ export default function App() {
             <Route path='dashboard' element={<DashboardPage />} />
             <Route path='transactions' element={<TransactionsPage />} />
             <Route path='history' element={<HistoryPage />} />
-            <Route path='cards' element={<MockPage title='My Cards' />} />
+            <Route path='cards' element={<CardsPage />} />
             <Route path='invest' element={<MockPage title='Investments' />} />
             <Route path='analytics' element={<AnalyticsPage />} />
             <Route path='profile' element={<ProfilePage />} />
