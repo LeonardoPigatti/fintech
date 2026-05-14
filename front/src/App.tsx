@@ -7,6 +7,8 @@ import DashboardPage from './pages/DashboardPage';
 import TransactionsPage from './pages/TransactionsPage';
 import HistoryPage from './pages/HistoryPage';
 import ProfilePage from './pages/ProfilePage';
+import AnalyticsPage from './pages/AnalyticsPage';
+
 
 
 const queryClient = new QueryClient({
@@ -41,7 +43,7 @@ export default function App() {
             <Route path='history' element={<HistoryPage />} />
             <Route path='cards' element={<MockPage title='My Cards' />} />
             <Route path='invest' element={<MockPage title='Investments' />} />
-            <Route path='analytics' element={<MockPage title='Analytics' />} />
+            <Route path='analytics' element={<AnalyticsPage />} />
             <Route path='profile' element={<ProfilePage />} />
           </Route>
           <Route path='*' element={<Navigate to='/login' replace />} />
