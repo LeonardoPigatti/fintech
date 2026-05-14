@@ -8,26 +8,31 @@ export default {
     extend: {
       colors: {
         primary: {
-          50:  "#f0f4ff",
-          100: "#e0e9ff",
-          500: "#4f6ef7",
-          600: "#3b55e6",
-          700: "#2d43cc",
-          900: "#1a2680",
+          50:  "#fff4ed",
+          100: "#ffe8d5",
+          200: "#ffd0aa",
+          300: "#ffb074",
+          400: "#ff843c",
+          500: "#e8611a",
+          600: "#d4500f",
+          700: "#b03d0b",
+          800: "#8c3110",
+          900: "#712a11",
+        },
+        cream: {
+          50:  "#fdf8f3",
+          100: "#faf0e6",
+          200: "#f5e0cc",
         },
         dark: {
-          900: "#0a0e1a",
-          800: "#111827",
-          700: "#1f2937",
-          600: "#374151",
+          800: "#2d2d2d",
+          700: "#3d3d3d",
+          600: "#4d4d4d",
         }
       },
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],
       },
-      backgroundImage: {
-        "gradient-fintech": "linear-gradient(135deg, #0a0e1a 0%, #1a1f3a 50%, #0f1729 100%)",
-      }
     },
   },
   plugins: [],

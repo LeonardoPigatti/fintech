@@ -16,6 +16,15 @@ const queryClient = new QueryClient({
   },
 });
 
+const MockPage = ({ title }: { title: string }) => (
+  <div className='flex items-center justify-center h-64'>
+    <div className='text-center'>
+      <h2 className='text-2xl font-bold text-dark-800 mb-2'>{title}</h2>
+      <p className='text-gray-400'>Em breve...</p>
+    </div>
+  </div>
+);
+
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -28,6 +37,10 @@ export default function App() {
             <Route path='dashboard' element={<DashboardPage />} />
             <Route path='transactions' element={<TransactionsPage />} />
             <Route path='history' element={<HistoryPage />} />
+            <Route path='cards' element={<MockPage title='My Cards' />} />
+            <Route path='invest' element={<MockPage title='Investments' />} />
+            <Route path='analytics' element={<MockPage title='Analytics' />} />
+            <Route path='profile' element={<MockPage title='Profile' />} />
           </Route>
           <Route path='*' element={<Navigate to='/login' replace />} />
         </Routes>

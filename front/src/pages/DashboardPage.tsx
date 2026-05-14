@@ -1,8 +1,23 @@
 import { useQuery } from '@tanstack/react-query';
 import { accountApi } from '../api/account';
-import { formatCurrency, formatDate, getTransactionLabel, getTransactionColor } from '../utils/formatters';
-import { TrendingUp, TrendingDown, ArrowLeftRight, Wallet, Copy } from 'lucide-react';
+import { formatCurrency, formatDate } from '../utils/formatters';
+import { TrendingUp, TrendingDown, ArrowLeftRight, Copy, Send, Download, CreditCard, Zap, Plus } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+
+const mockWeeklyData = [
+  { day: 'Mon', value: 280 },
+  { day: 'Tue', value: 320 },
+  { day: 'Wed', value: 250 },
+  { day: 'Thu', value: 420 },
+  { day: 'Fri', value: 380 },
+  { day: 'Sat', value: 200 },
+  { day: 'Sun', value: 150 },
+];
+
+const mockCards = [
+  { type: 'Credit Card', name: 'Premium', number: '4532 •••• •••• 8392', holder: 'Sarah Johnson', expires: '12/28', balance: null, color: 'bg-primary-500' },
+  { type: 'Debit Card', name: 'Classic', number: '5234 •••• •••• 1847', holder: 'Sarah Johnson', expires: '09/27', balance: 12450.30, color: 'bg-dark-800' },
+];
 
 export default function DashboardPage() {
   const { data: account, isLoading: accountLoading } = useQuery({
@@ -15,150 +30,216 @@ export default function DashboardPage() {
     queryFn: accountApi.getHistory,
   });
 
-  const deposits = transactions.filter(t => t.type === 'DEPOSIT').reduce((s, t) => s + t.amount, 0);
-  const withdrawals = transactions.filter(t => t.type === 'WITHDRAWAL').reduce((s, t) => s + t.amount, 0);
-  const transfers = transactions.filter(t => t.type === 'TRANSFER').length;
-
-  const chartData = transactions.slice(0, 7).reverse().map(t => ({
-    date: formatDate(t.createdAt).split(' ')[0],
-    value: t.amount,
-    type: t.type,
-  }));
-
   const copyAccountNumber = () => {
     if (account) navigator.clipboard.writeText(account.number);
   };
 
   return (
-    <div className='space-y-6'>
-      <div>
-        <h1 className='text-2xl font-bold text-white'>Dashboard</h1>
-        <p className='text-gray-400 text-sm mt-1'>Visão geral da sua conta</p>
-      </div>
+    <div className='grid grid-cols-3 gap-6'>
 
-      {/* Balance Card */}
-      <div className='relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-primary-600 to-purple-700 shadow-xl shadow-primary-500/20'>
-        <div className='absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-32 translate-x-32' />
-        <div className='absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-24 -translate-x-24' />
-        <div className='relative'>
-          <div className='flex items-center justify-between mb-6'>
-            <div>
-              <p className='text-white/70 text-sm font-medium'>Saldo disponível</p>
-              {accountLoading ? (
-                <div className='h-10 w-48 bg-white/20 rounded-lg animate-pulse mt-1' />
-              ) : (
-                <h2 className='text-4xl font-bold text-white mt-1'>
-                  {formatCurrency(account?.balance || 0)}
-                </h2>
-              )}
-            </div>
-            <div className='w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center'>
-              <Wallet className='w-7 h-7 text-white' />
-            </div>
-          </div>
-          <div className='flex items-center gap-4'>
-            <div>
-              <p className='text-white/60 text-xs'>Agência</p>
-              <p className='text-white font-mono font-medium'>{account?.agency || '----'}</p>
-            </div>
-            <div className='w-px h-8 bg-white/20' />
-            <div>
-              <p className='text-white/60 text-xs'>Conta</p>
-              <div className='flex items-center gap-2'>
-                <p className='text-white font-mono font-medium'>{account?.number || '--------'}</p>
-                <button onClick={copyAccountNumber} className='text-white/60 hover:text-white transition-colors'>
-                  <Copy className='w-3.5 h-3.5' />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Left column */}
+      <div className='col-span-2 space-y-6'>
 
-      {/* Stats */}
-      <div className='grid grid-cols-3 gap-4'>
-        <div className='glass rounded-2xl p-5 card-hover'>
-          <div className='flex items-center justify-between mb-3'>
-            <p className='text-gray-400 text-sm'>Entradas</p>
-            <div className='w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center'>
-              <TrendingUp className='w-4 h-4 text-emerald-400' />
+        {/* Balance Card */}
+        <div className='relative overflow-hidden rounded-2xl p-6 bg-primary-500 text-white'>
+          <div className='absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -translate-y-16 translate-x-16' />
+          <div className='absolute bottom-0 left-1/2 w-64 h-64 bg-white/5 rounded-full translate-y-32' />
+          <div className='relative'>
+            <div className='flex items-center justify-between mb-4'>
+              <p className='text-white/70 text-sm'>Total Balance</p>
+              <button className='text-white/70 hover:text-white'>
+                <Copy className='w-4 h-4' />
+              </button>
+            </div>
+            {accountLoading ? (
+              <div className='h-12 w-48 bg-white/20 rounded-lg animate-pulse mb-4' />
+            ) : (
+              <h2 className='text-4xl font-bold mb-1'>{formatCurrency(account?.balance || 0)}</h2>
+            )}
+            <p className='text-white/60 text-sm mb-6'>
+              Ag: {account?.agency || '----'} • Conta: {account?.number || '--------'}
+              <button onClick={copyAccountNumber} className='ml-2 text-white/60 hover:text-white'>
+                <Copy className='w-3 h-3 inline' />
+              </button>
+            </p>
+            <div className='flex gap-3'>
+              <button className='flex-1 flex items-center justify-center gap-2 bg-white/20 hover:bg-white/30 text-white py-3 rounded-xl text-sm font-medium transition-all'>
+                <Send className='w-4 h-4' /> Send Money
+              </button>
+              <button className='flex-1 flex items-center justify-center gap-2 bg-white/20 hover:bg-white/30 text-white py-3 rounded-xl text-sm font-medium transition-all'>
+                <Download className='w-4 h-4' /> Receive
+              </button>
             </div>
           </div>
-          <p className='text-xl font-bold text-emerald-400'>{formatCurrency(deposits)}</p>
         </div>
-        <div className='glass rounded-2xl p-5 card-hover'>
-          <div className='flex items-center justify-between mb-3'>
-            <p className='text-gray-400 text-sm'>Saídas</p>
-            <div className='w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center'>
-              <TrendingDown className='w-4 h-4 text-red-400' />
-            </div>
-          </div>
-          <p className='text-xl font-bold text-red-400'>{formatCurrency(withdrawals)}</p>
-        </div>
-        <div className='glass rounded-2xl p-5 card-hover'>
-          <div className='flex items-center justify-between mb-3'>
-            <p className='text-gray-400 text-sm'>Transferências</p>
-            <div className='w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center'>
-              <ArrowLeftRight className='w-4 h-4 text-blue-400' />
-            </div>
-          </div>
-          <p className='text-xl font-bold text-blue-400'>{transfers}</p>
-        </div>
-      </div>
 
-      {/* Chart */}
-      {chartData.length > 0 && (
-        <div className='glass rounded-2xl p-6'>
-          <h3 className='text-white font-semibold mb-4'>Movimentações recentes</h3>
-          <ResponsiveContainer width='100%' height={200}>
-            <AreaChart data={chartData}>
+        {/* Weekly Spending */}
+        <div className='card p-6'>
+          <div className='flex items-center justify-between mb-4'>
+            <div>
+              <h3 className='font-semibold text-dark-800'>Weekly Spending</h3>
+              <p className='text-xs text-gray-400'>May 8 - May 14</p>
+            </div>
+            <div className='text-right'>
+              <p className='font-bold text-dark-800'>$1,790</p>
+              <p className='text-xs text-green-500'>-12% vs last week</p>
+            </div>
+          </div>
+          <ResponsiveContainer width='100%' height={180}>
+            <AreaChart data={mockWeeklyData}>
               <defs>
-                <linearGradient id='colorValue' x1='0' y1='0' x2='0' y2='1'>
-                  <stop offset='5%' stopColor='#4f6ef7' stopOpacity={0.3} />
-                  <stop offset='95%' stopColor='#4f6ef7' stopOpacity={0} />
+                <linearGradient id='colorSpend' x1='0' y1='0' x2='0' y2='1'>
+                  <stop offset='5%' stopColor='#e8611a' stopOpacity={0.2} />
+                  <stop offset='95%' stopColor='#e8611a' stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <XAxis dataKey='date' stroke='#4b5563' tick={{ fill: '#9ca3af', fontSize: 12 }} />
-              <YAxis stroke='#4b5563' tick={{ fill: '#9ca3af', fontSize: 12 }} />
+              <XAxis dataKey='day' stroke='#d1d5db' tick={{ fill: '#9ca3af', fontSize: 12 }} />
+              <YAxis stroke='#d1d5db' tick={{ fill: '#9ca3af', fontSize: 12 }} />
               <Tooltip
-                contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '12px', color: '#fff' }}
-                formatter={(value) => [formatCurrency(Number(value)), 'Valor']}              />
-              <Area type='monotone' dataKey='value' stroke='#4f6ef7' fill='url(#colorValue)' strokeWidth={2} />
+                contentStyle={{ backgroundColor: '#fff', border: 'none', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                formatter={(value) => [`$${value}`, 'Spending']}
+              />
+              <Area type='monotone' dataKey='value' stroke='#e8611a' fill='url(#colorSpend)' strokeWidth={2} />
             </AreaChart>
           </ResponsiveContainer>
+          <div className='grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-cream-200'>
+            <div className='text-center'>
+              <p className='text-xs text-gray-400'>Average</p>
+              <p className='font-semibold text-dark-800'>$255</p>
+            </div>
+            <div className='text-center'>
+              <p className='text-xs text-gray-400'>Highest</p>
+              <p className='font-semibold text-dark-800'>$420</p>
+            </div>
+            <div className='text-center'>
+              <p className='text-xs text-gray-400'>Lowest</p>
+              <p className='font-semibold text-dark-800'>$120</p>
+            </div>
+          </div>
         </div>
-      )}
 
-      {/* Recent Transactions */}
-      <div className='glass rounded-2xl p-6'>
-        <h3 className='text-white font-semibold mb-4'>Últimas transações</h3>
-        {transactions.length === 0 ? (
-          <p className='text-gray-400 text-sm text-center py-8'>Nenhuma transação ainda</p>
-        ) : (
-          <div className='space-y-3'>
-            {transactions.slice(0, 5).map(t => (
-              <div key={t.id} className='flex items-center justify-between p-3 rounded-xl hover:bg-white/5 transition-colors'>
-                <div className='flex items-center gap-3'>
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                    t.type === 'DEPOSIT' ? 'bg-emerald-500/20' :
-                    t.type === 'WITHDRAWAL' ? 'bg-red-500/20' : 'bg-blue-500/20'
-                  }`}>
-                    {t.type === 'DEPOSIT' ? <TrendingUp className='w-5 h-5 text-emerald-400' /> :
-                     t.type === 'WITHDRAWAL' ? <TrendingDown className='w-5 h-5 text-red-400' /> :
-                     <ArrowLeftRight className='w-5 h-5 text-blue-400' />}
+        {/* Recent Transactions */}
+        <div className='card p-6'>
+          <div className='flex items-center justify-between mb-4'>
+            <h3 className='font-semibold text-dark-800'>Recent Transactions</h3>
+            <button className='text-primary-500 text-sm font-medium hover:text-primary-600'>See all</button>
+          </div>
+          {transactions.length === 0 ? (
+            <p className='text-gray-400 text-sm text-center py-8'>Nenhuma transação ainda</p>
+          ) : (
+            <div className='space-y-3'>
+              {transactions.slice(0, 6).map(t => (
+                <div key={t.id} className='flex items-center justify-between py-2'>
+                  <div className='flex items-center gap-3'>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      t.type === 'DEPOSIT' ? 'bg-green-100' :
+                      t.type === 'WITHDRAWAL' ? 'bg-red-100' : 'bg-blue-100'
+                    }`}>
+                      {t.type === 'DEPOSIT' ? <TrendingUp className='w-5 h-5 text-green-500' /> :
+                       t.type === 'WITHDRAWAL' ? <TrendingDown className='w-5 h-5 text-red-500' /> :
+                       <ArrowLeftRight className='w-5 h-5 text-blue-500' />}
+                    </div>
+                    <div>
+                      <p className='text-sm font-medium text-dark-800'>
+                        {t.type === 'DEPOSIT' ? 'Depósito' : t.type === 'WITHDRAWAL' ? 'Saque' : 'Transferência'}
+                      </p>
+                      <p className='text-xs text-gray-400'>{formatDate(t.createdAt)}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className='text-white text-sm font-medium'>{getTransactionLabel(t.type)}</p>
-                    <p className='text-gray-400 text-xs'>{formatDate(t.createdAt)}</p>
-                  </div>
+                  <p className={`font-semibold text-sm ${t.type === 'DEPOSIT' ? 'text-green-500' : 'text-red-500'}`}>
+                    {t.type === 'DEPOSIT' ? '+' : '-'}{formatCurrency(t.amount)}
+                  </p>
                 </div>
-                <p className={`font-semibold ${getTransactionColor(t.type)}`}>
-                  {t.type === 'DEPOSIT' ? '+' : '-'}{formatCurrency(t.amount)}
-                </p>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Right column */}
+      <div className='space-y-6'>
+
+        {/* Quick Actions */}
+        <div className='card p-6'>
+          <div className='grid grid-cols-2 gap-3'>
+            <button className='flex flex-col items-center gap-2 p-4 rounded-xl bg-cream-100 hover:bg-primary-50 transition-colors card-hover'>
+              <div className='w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm'>
+                <CreditCard className='w-5 h-5 text-primary-500' />
+              </div>
+              <span className='text-xs font-medium text-dark-800'>My Cards</span>
+              <span className='text-xs text-gray-400'>2 Active</span>
+            </button>
+            <button className='flex flex-col items-center gap-2 p-4 rounded-xl bg-cream-100 hover:bg-primary-50 transition-colors card-hover'>
+              <div className='w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm'>
+                <Zap className='w-5 h-5 text-primary-500' />
+              </div>
+              <span className='text-xs font-medium text-dark-800'>Pix Transfers</span>
+              <span className='text-xs text-gray-400'>Quick Send</span>
+            </button>
+            <button className='flex flex-col items-center gap-2 p-4 rounded-xl bg-cream-100 hover:bg-primary-50 transition-colors card-hover col-span-2'>
+              <div className='w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm'>
+                <TrendingUp className='w-5 h-5 text-primary-500' />
+              </div>
+              <span className='text-xs font-medium text-dark-800'>Investments</span>
+              <span className='text-xs text-green-500'>+12.5%</span>
+            </button>
+          </div>
+        </div>
+
+        {/* My Cards */}
+        <div className='card p-6'>
+          <div className='flex items-center justify-between mb-4'>
+            <h3 className='font-semibold text-dark-800'>My Cards</h3>
+            <button className='text-primary-500 text-sm font-medium flex items-center gap-1'>
+              <Plus className='w-4 h-4' /> Add Card
+            </button>
+          </div>
+          <div className='space-y-3'>
+            {mockCards.map((card, i) => (
+              <div key={i} className={`${card.color} rounded-2xl p-4 text-white`}>
+                <div className='flex items-center justify-between mb-3'>
+                  <p className='text-xs text-white/70'>{card.type}</p>
+                  <CreditCard className='w-4 h-4 text-white/70' />
+                </div>
+                <p className='text-sm font-bold mb-3'>{card.name}</p>
+                <p className='font-mono text-sm mb-3'>{card.number}</p>
+                <div className='flex items-center justify-between text-xs text-white/70'>
+                  <span>{card.holder}</span>
+                  <span>{card.expires}</span>
+                </div>
+                {card.balance && (
+                  <p className='text-white font-bold mt-2'>{formatCurrency(card.balance)}</p>
+                )}
               </div>
             ))}
           </div>
-        )}
+        </div>
+
+        {/* PIX */}
+        <div className='card p-6'>
+          <h3 className='font-semibold text-dark-800 mb-4'>Pix & Transfers</h3>
+          <div className='grid grid-cols-4 gap-2 mb-4'>
+            {['QR Code', 'Pix Key', 'Contact', 'Bank'].map(item => (
+              <button key={item} className='flex flex-col items-center gap-2 p-2 rounded-xl hover:bg-cream-100 transition-colors'>
+                <div className='w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center'>
+                  <Zap className='w-4 h-4 text-primary-500' />
+                </div>
+                <span className='text-xs text-gray-500'>{item}</span>
+              </button>
+            ))}
+          </div>
+          <div className='bg-cream-100 rounded-xl p-3 flex items-center justify-between'>
+            <div>
+              <p className='text-xs text-gray-400'>My Pix Key</p>
+              <p className='text-sm font-medium text-dark-800 truncate max-w-32'>
+                {account?.number || 'Carregando...'}
+              </p>
+            </div>
+            <button className='bg-primary-500 text-white text-xs font-medium px-3 py-2 rounded-lg hover:bg-primary-600 transition-colors'>
+              Share
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
