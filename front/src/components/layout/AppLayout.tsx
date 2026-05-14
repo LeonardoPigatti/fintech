@@ -1,7 +1,8 @@
 import { Outlet, Navigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import { useAuth } from '../../hooks/useAuth';
-import { Bell, Settings } from 'lucide-react';
+import { Settings } from 'lucide-react';
+import Notifications from '../ui/Notifications';
 
 export default function AppLayout() {
   const { isAuthenticated, userName } = useAuth();
@@ -29,9 +30,7 @@ export default function AppLayout() {
             <h1 className='text-2xl font-bold text-dark-800'>{userName || 'Usuário'}</h1>
           </div>
           <div className='flex items-center gap-3'>
-            <button className='w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm hover:shadow-md transition-shadow'>
-              <Bell className='w-5 h-5 text-gray-400' />
-            </button>
+            <Notifications />
             <button className='w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm hover:shadow-md transition-shadow'>
               <Settings className='w-5 h-5 text-gray-400' />
             </button>
