@@ -122,8 +122,7 @@ export default function DashboardPage() {
               <YAxis stroke='#4b5563' tick={{ fill: '#9ca3af', fontSize: 12 }} />
               <Tooltip
                 contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '12px', color: '#fff' }}
-                formatter={(value: number) => [formatCurrency(value), 'Valor']}
-              />
+                formatter={(value) => [formatCurrency(Number(value)), 'Valor']}              />
               <Area type='monotone' dataKey='value' stroke='#4f6ef7' fill='url(#colorValue)' strokeWidth={2} />
             </AreaChart>
           </ResponsiveContainer>

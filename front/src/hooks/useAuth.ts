@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { authApi } from '../api/auth';
 import type { LoginRequest, RegisterRequest } from '../types';
 
