@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { cardsApi } from '../api/cards';
-import type { CreateCardRequest } from '../api/cards';
+import type { CreateCardRequest, Card } from '../api/cards';
 import { formatCurrency } from '../utils/formatters';
-import { CreditCard, Plus, Trash2, Loader2, X } from 'lucide-react';
+import { CreditCard, Plus, Trash2, Pencil, Loader2, X } from 'lucide-react';
 
 const brandColors: Record<string, string> = {
   VISA: 'bg-primary-500',
@@ -12,25 +12,21 @@ const brandColors: Record<string, string> = {
   AMEX: 'bg-blue-700',
 };
 
-const brandLogos: Record<string, string> = {
-  VISA: 'VISA',
-  MASTERCARD: 'MC',
-  ELO: 'ELO',
-  AMEX: 'AMEX',
+const emptyForm: CreateCardRequest = {
+  cardType: 'CREDIT',
+  brand: 'VISA',
+  holderName: '',
+  lastFour: '',
+  expiryMonth: 1,
+  expiryYear: 2028,
+  creditLimit: undefined,
 };
 
 export default function CardsPage() {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState<CreateCardRequest>({
-    cardType: 'CREDIT',
-    brand: 'VISA',
-    holderName: '',
-    lastFour: '',
-    expiryMonth: 1,
-    expiryYear: 2028,
-    creditLimit: undefined,
-  });
+  const [editingCard, setEditingCard] = useState<Card | null>(null);
+  const [form, setForm] = useState<CreateCardRequest>(emptyForm);
 
   const { data: cards = [], isLoading } = useQuery({
     queryKey: ['cards'],
@@ -42,19 +38,60 @@ export default function CardsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cards'] });
       setShowForm(false);
-      setForm({ cardType: 'CREDIT', brand: 'VISA', holderName: '', lastFour: '', expiryMonth: 1, expiryYear: 2028 });
+      setForm(emptyForm);
     },
   });
+
+const updateMutation = useMutation({
+  mutationFn: ({ id, data }: { id: string; data: CreateCardRequest }) => {
+    console.log('Calling updateCard:', id, data);
+    return cardsApi.updateCard(id, data);
+  },
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ['cards'] });
+    setEditingCard(null);
+    setForm(emptyForm);
+  },
+  onError: (error) => {
+    console.error('Update error:', error);
+  },
+});
 
   const deleteMutation = useMutation({
     mutationFn: cardsApi.deleteCard,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['cards'] }),
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    createMutation.mutate(form);
+  const handleEdit = (card: Card) => {
+    setEditingCard(card);
+    setForm({
+      cardType: card.cardType,
+      brand: card.brand,
+      holderName: card.holderName,
+      lastFour: card.lastFour,
+      expiryMonth: card.expiryMonth,
+      expiryYear: card.expiryYear,
+      creditLimit: card.creditLimit || undefined,
+    });
   };
+
+const handleSubmit = (e: React.FormEvent) => {
+  e.preventDefault();
+  console.log('Submit - editingCard:', editingCard, 'form:', form);
+  if (editingCard) {
+    updateMutation.mutate({ id: editingCard.id, data: form });
+  } else {
+    createMutation.mutate(form);
+  }
+};
+
+  const handleClose = () => {
+    setShowForm(false);
+    setEditingCard(null);
+    setForm(emptyForm);
+  };
+
+  const isPending = createMutation.isPending || updateMutation.isPending;
 
   return (
     <div className='space-y-6'>
@@ -95,12 +132,18 @@ export default function CardsPage() {
                 <div className='flex items-center justify-between mb-6'>
                   <div>
                     <p className='text-white/70 text-xs'>{card.cardType} Card</p>
-                    <p className='font-bold'>{brandLogos[card.brand]}</p>
+                    <p className='font-bold'>{card.brand}</p>
                   </div>
-                  <button onClick={() => deleteMutation.mutate(card.id)}
-                    className='w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors'>
-                    {deleteMutation.isPending ? <Loader2 className='w-4 h-4 animate-spin' /> : <Trash2 className='w-4 h-4' />}
-                  </button>
+                  <div className='flex gap-2'>
+                    <button onClick={() => handleEdit(card)}
+                      className='w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors'>
+                      <Pencil className='w-4 h-4' />
+                    </button>
+                    <button onClick={() => deleteMutation.mutate(card.id)}
+                      className='w-8 h-8 rounded-full bg-white/20 hover:bg-red-500/50 flex items-center justify-center transition-colors'>
+                      {deleteMutation.isPending ? <Loader2 className='w-4 h-4 animate-spin' /> : <Trash2 className='w-4 h-4' />}
+                    </button>
+                  </div>
                 </div>
                 <p className='font-mono text-lg mb-4'>•••• •••• •••• {card.lastFour}</p>
                 <div className='flex items-center justify-between'>
@@ -127,13 +170,15 @@ export default function CardsPage() {
         </div>
       )}
 
-      {/* Add Card Modal */}
-      {showForm && (
+      {/* Add/Edit Card Modal */}
+      {(showForm || editingCard) && (
         <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4'>
           <div className='bg-white rounded-2xl p-6 w-full max-w-md'>
             <div className='flex items-center justify-between mb-6'>
-              <h2 className='text-lg font-bold text-dark-800'>Add New Card</h2>
-              <button onClick={() => setShowForm(false)} className='text-gray-400 hover:text-dark-800 transition-colors'>
+              <h2 className='text-lg font-bold text-dark-800'>
+                {editingCard ? 'Edit Card' : 'Add New Card'}
+              </h2>
+              <button onClick={handleClose} className='text-gray-400 hover:text-dark-800 transition-colors'>
                 <X className='w-5 h-5' />
               </button>
             </div>
@@ -198,9 +243,9 @@ export default function CardsPage() {
                 </div>
               )}
 
-              <button type='submit' disabled={createMutation.isPending}
+              <button type='submit' disabled={isPending}
                 className='w-full bg-primary-500 hover:bg-primary-600 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2'>
-                {createMutation.isPending ? <Loader2 className='w-5 h-5 animate-spin' /> : <><Plus className='w-5 h-5' /> Add Card</>}
+                {isPending ? <Loader2 className='w-5 h-5 animate-spin' /> : editingCard ? <><Pencil className='w-5 h-5' /> Save Changes</> : <><Plus className='w-5 h-5' /> Add Card</>}
               </button>
             </form>
           </div>

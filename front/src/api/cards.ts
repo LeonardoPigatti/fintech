@@ -35,7 +35,12 @@ export const cardsApi = {
     return response.data;
   },
 
+  updateCard: async (cardId: string, data: CreateCardRequest): Promise<Card> => {
+    const response = await api.put<Card>('/cards/' + cardId, data);
+    return response.data;
+  },
+
   deleteCard: async (cardId: string): Promise<void> => {
-    await api.delete(/cards/);
+    await api.delete('/cards/' + cardId);
   },
 };
