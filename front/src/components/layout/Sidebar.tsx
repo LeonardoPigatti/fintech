@@ -13,11 +13,15 @@ const navItems = [
 
 export default function Sidebar() {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, userName } = useAuth();
 
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
   return (
@@ -64,6 +68,21 @@ export default function Sidebar() {
           <HelpCircle className='w-5 h-5' />
           Help & Support
         </NavLink>
+
+        {/* User Avatar */}
+        <button onClick={() => navigate('/profile')}
+          className='w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-cream-100 transition-all'>
+          <div className='w-8 h-8 rounded-full bg-primary-500 flex items-center justify-center shrink-0'>
+            <span className='text-white text-xs font-bold'>
+              {userName ? getInitials(userName) : 'U'}
+            </span>
+          </div>
+          <div className='flex-1 min-w-0 text-left'>
+            <p className='text-sm font-medium text-dark-800 truncate'>{userName || 'Usuário'}</p>
+            <p className='text-xs text-gray-400'>View profile</p>
+          </div>
+        </button>
+
         <button onClick={handleLogout}
           className='w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-500 hover:text-red-500 hover:bg-red-50 transition-all text-sm font-medium'>
           <LogOut className='w-5 h-5' />

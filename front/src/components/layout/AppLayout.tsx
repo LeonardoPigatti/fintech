@@ -1,4 +1,4 @@
-import { Outlet, Navigate } from 'react-router-dom';
+import { Outlet, Navigate, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import { useAuth } from '../../hooks/useAuth';
 import { Settings } from 'lucide-react';
@@ -6,12 +6,9 @@ import Notifications from '../ui/Notifications';
 
 export default function AppLayout() {
   const { isAuthenticated, userName } = useAuth();
+  const navigate = useNavigate();
 
   if (!isAuthenticated) return <Navigate to='/login' replace />;
-
-  const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-  };
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -31,14 +28,12 @@ export default function AppLayout() {
           </div>
           <div className='flex items-center gap-3'>
             <Notifications />
-            <button className='w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm hover:shadow-md transition-shadow'>
+            <button
+              onClick={() => navigate('/profile')}
+              className='w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm hover:shadow-md transition-shadow'
+              title='Settings'>
               <Settings className='w-5 h-5 text-gray-400' />
             </button>
-            <div className='w-10 h-10 rounded-full bg-primary-500 flex items-center justify-center'>
-              <span className='text-white text-sm font-bold'>
-                {userName ? getInitials(userName) : 'U'}
-              </span>
-            </div>
           </div>
         </header>
         <div className='px-8 pb-8'>
