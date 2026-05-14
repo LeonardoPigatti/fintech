@@ -5,16 +5,6 @@ import { formatCurrency, formatDate } from '../utils/formatters';
 import { TrendingUp, TrendingDown, ArrowLeftRight, Copy, Send, Download, CreditCard, Zap, Plus } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
-const mockWeeklyData = [
-  { day: 'Mon', value: 280 },
-  { day: 'Tue', value: 320 },
-  { day: 'Wed', value: 250 },
-  { day: 'Thu', value: 420 },
-  { day: 'Fri', value: 380 },
-  { day: 'Sat', value: 200 },
-  { day: 'Sun', value: 150 },
-];
-
 const mockCards = [
   { type: 'Credit Card', name: 'Premium', number: '4532 •••• •••• 8392', holder: 'Sarah Johnson', expires: '12/28', balance: null, color: 'bg-primary-500' },
   { type: 'Debit Card', name: 'Classic', number: '5234 •••• •••• 1847', holder: 'Sarah Johnson', expires: '09/27', balance: 12450.30, color: 'bg-dark-800' },
@@ -36,6 +26,25 @@ export default function DashboardPage() {
   const copyAccountNumber = () => {
     if (account) navigator.clipboard.writeText(account.number);
   };
+
+  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const weeklyData = weekDays.map(day => ({ day, value: 0 }));
+
+  const today = new Date();
+  const startOfWeek = new Date(today);
+  startOfWeek.setDate(today.getDate() - today.getDay());
+  startOfWeek.setHours(0, 0, 0, 0);
+
+  transactions.forEach(t => {
+    const date = new Date(t.createdAt);
+    if (date >= startOfWeek && (t.type === 'WITHDRAWAL' || t.type === 'TRANSFER')) {
+      weeklyData[date.getDay()].value += Number(t.amount);
+    }
+  });
+
+  const totalWeekly = weeklyData.reduce((s, d) => s + d.value, 0);
+  const maxDay = weeklyData.reduce((max, d) => d.value > max.value ? d : max, weeklyData[0]);
+  const avgDay = totalWeekly / 7;
 
   return (
     <div className='grid grid-cols-3 gap-6'>
@@ -66,13 +75,11 @@ export default function DashboardPage() {
               </button>
             </p>
             <div className='flex gap-3'>
-              <button
-                onClick={() => navigate('/transactions')}
+              <button onClick={() => navigate('/transactions')}
                 className='flex-1 flex items-center justify-center gap-2 bg-white/20 hover:bg-white/30 text-white py-3 rounded-xl text-sm font-medium transition-all'>
                 <Send className='w-4 h-4' /> Send Money
               </button>
-              <button
-                onClick={() => navigate('/transactions')}
+              <button onClick={() => navigate('/transactions')}
                 className='flex-1 flex items-center justify-center gap-2 bg-white/20 hover:bg-white/30 text-white py-3 rounded-xl text-sm font-medium transition-all'>
                 <Download className='w-4 h-4' /> Receive
               </button>
@@ -85,15 +92,17 @@ export default function DashboardPage() {
           <div className='flex items-center justify-between mb-4'>
             <div>
               <h3 className='font-semibold text-dark-800'>Weekly Spending</h3>
-              <p className='text-xs text-gray-400'>May 8 - May 14</p>
+              <p className='text-xs text-gray-400'>
+                {startOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {today.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              </p>
             </div>
             <div className='text-right'>
-              <p className='font-bold text-dark-800'>$1,790</p>
-              <p className='text-xs text-green-500'>-12% vs last week</p>
+              <p className='font-bold text-dark-800'>{formatCurrency(totalWeekly)}</p>
+              <p className='text-xs text-gray-400'>this week</p>
             </div>
           </div>
           <ResponsiveContainer width='100%' height={180}>
-            <AreaChart data={mockWeeklyData}>
+            <AreaChart data={weeklyData}>
               <defs>
                 <linearGradient id='colorSpend' x1='0' y1='0' x2='0' y2='1'>
                   <stop offset='5%' stopColor='#e8611a' stopOpacity={0.2} />
@@ -104,23 +113,23 @@ export default function DashboardPage() {
               <YAxis stroke='#d1d5db' tick={{ fill: '#9ca3af', fontSize: 12 }} />
               <Tooltip
                 contentStyle={{ backgroundColor: '#fff', border: 'none', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                formatter={(value) => [`$${value}`, 'Spending']}
+                formatter={(value) => [formatCurrency(Number(value)), 'Spending']}
               />
               <Area type='monotone' dataKey='value' stroke='#e8611a' fill='url(#colorSpend)' strokeWidth={2} />
             </AreaChart>
           </ResponsiveContainer>
           <div className='grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-cream-200'>
             <div className='text-center'>
-              <p className='text-xs text-gray-400'>Average</p>
-              <p className='font-semibold text-dark-800'>$255</p>
+              <p className='text-xs text-gray-400'>Average/day</p>
+              <p className='font-semibold text-dark-800'>{formatCurrency(avgDay)}</p>
             </div>
             <div className='text-center'>
-              <p className='text-xs text-gray-400'>Highest</p>
-              <p className='font-semibold text-dark-800'>$420</p>
+              <p className='text-xs text-gray-400'>Highest day</p>
+              <p className='font-semibold text-dark-800'>{maxDay.day} - {formatCurrency(maxDay.value)}</p>
             </div>
             <div className='text-center'>
-              <p className='text-xs text-gray-400'>Lowest</p>
-              <p className='font-semibold text-dark-800'>$120</p>
+              <p className='text-xs text-gray-400'>Transactions</p>
+              <p className='font-semibold text-dark-800'>{transactions.length}</p>
             </div>
           </div>
         </div>
@@ -227,7 +236,7 @@ export default function DashboardPage() {
           <h3 className='font-semibold text-dark-800 mb-4'>Pix & Transfers</h3>
           <div className='grid grid-cols-4 gap-2 mb-4'>
             {['QR Code', 'Pix Key', 'Contact', 'Bank'].map(item => (
-              <button key={item} className='flex flex-col items-center gap-2 p-2 rounded-xl hover:bg-cream-100 transition-colors'>
+              <button key={item} onClick={() => navigate('/transactions')} className='flex flex-col items-center gap-2 p-2 rounded-xl hover:bg-cream-100 transition-colors'>
                 <div className='w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center'>
                   <Zap className='w-4 h-4 text-primary-500' />
                 </div>
