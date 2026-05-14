@@ -49,9 +49,11 @@ jobs:
 
       - name: Build with Maven
         run: ./mvnw compile -q
+        working-directory: back/banking-api
 
       - name: Run tests
         run: ./mvnw test
+        working-directory: back/banking-api
         env:
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/banking_db_test
           SPRING_DATASOURCE_USERNAME: banking_user
@@ -64,4 +66,4 @@ jobs:
         if: always()
         with:
           name: test-results
-          path: target/surefire-reports/
+          path: back/banking-api/target/surefire-reports/
