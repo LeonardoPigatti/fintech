@@ -52,10 +52,18 @@ export default function Sidebar() {
       </nav>
 
       <div className='p-4 border-t border-cream-200 space-y-1'>
-        <button className='w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-500 hover:text-primary-500 hover:bg-primary-50 transition-all text-sm font-medium'>
+        <NavLink to='/help'
+          className={({ isActive }) =>
+            `w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-medium ${
+              isActive
+                ? 'bg-primary-500 text-white'
+                : 'text-gray-500 hover:text-primary-500 hover:bg-primary-50'
+            }`
+          }
+        >
           <HelpCircle className='w-5 h-5' />
           Help & Support
-        </button>
+        </NavLink>
         <button onClick={handleLogout}
           className='w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-500 hover:text-red-500 hover:bg-red-50 transition-all text-sm font-medium'>
           <LogOut className='w-5 h-5' />

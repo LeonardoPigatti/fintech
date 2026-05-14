@@ -10,6 +10,7 @@ import ProfilePage from './pages/ProfilePage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import CardsPage from './pages/CardsPage';
 import InvestPage from './pages/InvestPage';
+import HelpPage from './pages/HelpPage';
 
 
 const queryClient = new QueryClient({
@@ -46,6 +47,7 @@ export default function App() {
             <Route path='invest' element={<InvestPage />} />
             <Route path='analytics' element={<AnalyticsPage />} />
             <Route path='profile' element={<ProfilePage />} />
+            <Route path='help' element={<HelpPage />} />
           </Route>
           <Route path='*' element={<Navigate to='/login' replace />} />
         </Routes>
