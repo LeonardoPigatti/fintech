@@ -1,14 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { accountApi } from '../api/account';
+import { cardsApi } from '../api/cards';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { TrendingUp, TrendingDown, ArrowLeftRight, Copy, Send, Download, CreditCard, Zap, Plus } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-
-const mockCards = [
-  { type: 'Credit Card', name: 'Premium', number: '4532 •••• •••• 8392', holder: 'Sarah Johnson', expires: '12/28', balance: null, color: 'bg-primary-500' },
-  { type: 'Debit Card', name: 'Classic', number: '5234 •••• •••• 1847', holder: 'Sarah Johnson', expires: '09/27', balance: 12450.30, color: 'bg-dark-800' },
-];
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -21,6 +17,11 @@ export default function DashboardPage() {
   const { data: transactions = [] } = useQuery({
     queryKey: ['transactions'],
     queryFn: accountApi.getHistory,
+  });
+
+  const { data: cards = [] } = useQuery({
+    queryKey: ['cards'],
+    queryFn: cardsApi.getMyCards,
   });
 
   const copyAccountNumber = () => {
@@ -45,6 +46,13 @@ export default function DashboardPage() {
   const totalWeekly = weeklyData.reduce((s, d) => s + d.value, 0);
   const maxDay = weeklyData.reduce((max, d) => d.value > max.value ? d : max, weeklyData[0]);
   const avgDay = totalWeekly / 7;
+
+  const cardBgColor = (brand: string) => {
+    if (brand === 'VISA') return 'bg-primary-500';
+    if (brand === 'MASTERCARD') return 'bg-dark-800';
+    if (brand === 'ELO') return 'bg-yellow-600';
+    return 'bg-blue-700';
+  };
 
   return (
     <div className='grid grid-cols-3 gap-6'>
@@ -183,7 +191,7 @@ export default function DashboardPage() {
                 <CreditCard className='w-5 h-5 text-primary-500' />
               </div>
               <span className='text-xs font-medium text-dark-800'>My Cards</span>
-              <span className='text-xs text-gray-400'>2 Active</span>
+              <span className='text-xs text-gray-400'>{cards.length} Active</span>
             </button>
             <button onClick={() => navigate('/transactions')} className='flex flex-col items-center gap-2 p-4 rounded-xl bg-cream-100 hover:bg-primary-50 transition-colors card-hover'>
               <div className='w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm'>
@@ -206,29 +214,36 @@ export default function DashboardPage() {
         <div className='card p-6'>
           <div className='flex items-center justify-between mb-4'>
             <h3 className='font-semibold text-dark-800'>My Cards</h3>
-            <button className='text-primary-500 text-sm font-medium flex items-center gap-1'>
+            <button onClick={() => navigate('/cards')} className='text-primary-500 text-sm font-medium flex items-center gap-1'>
               <Plus className='w-4 h-4' /> Add Card
             </button>
           </div>
-          <div className='space-y-3'>
-            {mockCards.map((card, i) => (
-              <div key={i} className={`${card.color} rounded-2xl p-4 text-white`}>
-                <div className='flex items-center justify-between mb-3'>
-                  <p className='text-xs text-white/70'>{card.type}</p>
-                  <CreditCard className='w-4 h-4 text-white/70' />
+          {cards.length === 0 ? (
+            <div className='text-center py-4'>
+              <p className='text-gray-400 text-sm mb-3'>No cards yet</p>
+              <button onClick={() => navigate('/cards')}
+                className='bg-primary-500 text-white text-xs px-3 py-2 rounded-lg hover:bg-primary-600 transition-colors'>
+                Add Card
+              </button>
+            </div>
+          ) : (
+            <div className='space-y-3'>
+              {cards.slice(0, 2).map((card) => (
+                <div key={card.id} className={`${cardBgColor(card.brand)} rounded-2xl p-4 text-white`}>
+                  <div className='flex items-center justify-between mb-3'>
+                    <p className='text-xs text-white/70'>{card.cardType} Card</p>
+                    <CreditCard className='w-4 h-4 text-white/70' />
+                  </div>
+                  <p className='text-sm font-bold mb-2'>{card.brand}</p>
+                  <p className='font-mono text-sm mb-3'>•••• •••• •••• {card.lastFour}</p>
+                  <div className='flex items-center justify-between text-xs text-white/70'>
+                    <span>{card.holderName}</span>
+                    <span>{String(card.expiryMonth).padStart(2, '0')}/{card.expiryYear}</span>
+                  </div>
                 </div>
-                <p className='text-sm font-bold mb-3'>{card.name}</p>
-                <p className='font-mono text-sm mb-3'>{card.number}</p>
-                <div className='flex items-center justify-between text-xs text-white/70'>
-                  <span>{card.holder}</span>
-                  <span>{card.expires}</span>
-                </div>
-                {card.balance && (
-                  <p className='text-white font-bold mt-2'>{formatCurrency(card.balance)}</p>
-                )}
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* PIX */}
