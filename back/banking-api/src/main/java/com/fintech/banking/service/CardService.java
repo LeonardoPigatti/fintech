@@ -9,5 +9,6 @@ import java.util.UUID;
 public interface CardService {
     List<CardResponse> getMyCards(String email);
     CardResponse createCard(String email, CreateCardRequest request);
+    CardResponse updateCard(String email, UUID cardId, CreateCardRequest request);
     void deleteCard(String email, UUID cardId);
 }

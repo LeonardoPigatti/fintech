@@ -52,7 +52,6 @@ public class CardServiceImpl implements CardService {
     public CardResponse createCard(String email, CreateCardRequest request) {
         var user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("Usu\u00e1rio n\u00e3o encontrado"));
-
         Card card = Card.builder()
                 .user(user)
                 .cardType(request.getCardType())
@@ -64,9 +63,32 @@ public class CardServiceImpl implements CardService {
                 .creditLimit(request.getCreditLimit())
                 .availableLimit(request.getCreditLimit())
                 .build();
-
         cardRepository.save(card);
         log.info("[CARD] Cart\u00e3o criado para: {}", email);
+        return toResponse(card);
+    }
+
+    @Override
+    @Transactional
+    public CardResponse updateCard(String email, UUID cardId, CreateCardRequest request) {
+        var user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Usu\u00e1rio n\u00e3o encontrado"));
+        var card = cardRepository.findById(cardId)
+                .orElseThrow(() -> new IllegalArgumentException("Cart\u00e3o n\u00e3o encontrado"));
+        if (!card.getUser().getId().equals(user.getId()))
+            throw new IllegalArgumentException("Cart\u00e3o n\u00e3o pertence ao usu\u00e1rio");
+        card.setCardType(request.getCardType());
+        card.setBrand(request.getBrand());
+        card.setHolderName(request.getHolderName());
+        card.setLastFour(request.getLastFour());
+        card.setExpiryMonth(request.getExpiryMonth());
+        card.setExpiryYear(request.getExpiryYear());
+        if (request.getCreditLimit() != null) {
+            card.setCreditLimit(request.getCreditLimit());
+            card.setAvailableLimit(request.getCreditLimit());
+        }
+        cardRepository.save(card);
+        log.info("[CARD] Cart\u00e3o atualizado: {}", cardId);
         return toResponse(card);
     }
 
@@ -77,9 +99,8 @@ public class CardServiceImpl implements CardService {
                 .orElseThrow(() -> new IllegalArgumentException("Usu\u00e1rio n\u00e3o encontrado"));
         var card = cardRepository.findById(cardId)
                 .orElseThrow(() -> new IllegalArgumentException("Cart\u00e3o n\u00e3o encontrado"));
-        if (!card.getUser().getId().equals(user.getId())) {
+        if (!card.getUser().getId().equals(user.getId()))
             throw new IllegalArgumentException("Cart\u00e3o n\u00e3o pertence ao usu\u00e1rio");
-        }
         card.setActive(false);
         cardRepository.save(card);
         log.info("[CARD] Cart\u00e3o removido: {}", cardId);

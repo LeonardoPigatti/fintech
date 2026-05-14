@@ -35,6 +35,14 @@ public class CardController {
                 .body(cardService.createCard(userDetails.getUsername(), request));
     }
 
+    @PutMapping("/{cardId}")
+    public ResponseEntity<CardResponse> updateCard(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable UUID cardId,
+            @Valid @RequestBody CreateCardRequest request) {
+        return ResponseEntity.ok(cardService.updateCard(userDetails.getUsername(), cardId, request));
+    }
+
     @DeleteMapping("/{cardId}")
     public ResponseEntity<Void> deleteCard(
             @AuthenticationPrincipal UserDetails userDetails,
