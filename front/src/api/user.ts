@@ -15,4 +15,8 @@ export const userApi = {
     const response = await api.get<UserProfile>('/users/me');
     return response.data;
   },
+
+  changePassword: async (data: { currentPassword: string; newPassword: string }): Promise<void> => {
+    await api.put('/users/change-password', data);
+  },
 };
