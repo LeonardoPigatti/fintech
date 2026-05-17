@@ -124,21 +124,32 @@ FinBank is a production-ready digital banking platform that demonstrates modern 
 
 ### Dashboard
 > Balance overview, weekly spending with filters, recent transactions, cards and PIX section.
+<img width="1919" height="872" alt="image" src="https://github.com/user-attachments/assets/7d10ebe1-2c58-499a-8b37-08b88d32a943" />
+<img width="1919" height="877" alt="image" src="https://github.com/user-attachments/assets/71a0cd8c-f29d-400b-981e-42fe6786e90a" />
+
 
 ### Cards Page
 > Full card management with add, edit and delete functionality.
+> <img width="1919" height="868" alt="image" src="https://github.com/user-attachments/assets/595df59d-94d2-4293-98dd-50c062afe756" />
+<img width="1919" height="844" alt="image" src="https://github.com/user-attachments/assets/a0c0a5c8-0177-4d35-9123-68954005a66c" />
 
 ### Investments Page
 > Investment products with real-time compound interest simulation and redemption.
+<img width="1919" height="874" alt="image" src="https://github.com/user-attachments/assets/763a1728-27f5-4537-b37d-5389dc40ee05" />
+<img width="1919" height="864" alt="image" src="https://github.com/user-attachments/assets/f130f630-5aaf-4d34-bdcb-c34f2b4aa2f5" />
 
 ### Analytics Page
 > Charts with real transaction data — area chart, pie chart and bar chart.
+<img width="1919" height="870" alt="image" src="https://github.com/user-attachments/assets/bd52a7e8-c101-449c-90eb-3993e7708a62" />
+<img width="1919" height="864" alt="image" src="https://github.com/user-attachments/assets/1e9f157e-d0bd-4b86-bf53-eae13f537aa3" />
 
 ### Profile Page
 > User profile with account details and functional settings.
+<img width="1919" height="869" alt="image" src="https://github.com/user-attachments/assets/50766917-217b-42a5-afb3-6e4525606c46" />
 
 ### Help & Support
 > FAQ accordion with topic browser and contact options.
+<img width="1918" height="851" alt="image" src="https://github.com/user-attachments/assets/5bf8d70f-aaa2-4a74-b6cc-a086a53e43e1" />
 
 ---
 
