@@ -2,10 +2,11 @@ import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { accountApi } from '../api/account';
 import { cardsApi } from '../api/cards';
+import { investmentsApi } from '../api/investments';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { TrendingUp, TrendingDown, ArrowLeftRight, Copy, Send, Download, CreditCard, Zap, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
-import { useState, useRef } from 'react';
+import { XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { useState } from 'react';
 
 type SpendingFilter = 'week' | 'month' | 'all';
 type SpendingType = 'all' | 'WITHDRAWAL' | 'TRANSFER' | 'DEPOSIT';
@@ -31,6 +32,19 @@ export default function DashboardPage() {
     queryKey: ['cards'],
     queryFn: cardsApi.getMyCards,
   });
+
+  const { data: investments = [] } = useQuery({
+    queryKey: ['investments'],
+    queryFn: investmentsApi.getMyInvestments,
+  });
+
+  // Cálculo do rendimento real dos investimentos ativos
+  const activeInvestments = investments.filter(i => i.status === 'ACTIVE');
+  const totalInvested = activeInvestments.reduce((sum, i) => sum + i.amount, 0);
+  const totalCurrent  = activeInvestments.reduce((sum, i) => sum + i.currentValue, 0);
+  const investmentGain = totalInvested > 0
+    ? ((totalCurrent - totalInvested) / totalInvested) * 100
+    : null;
 
   const copyAccountNumber = () => {
     if (account) {
@@ -267,7 +281,18 @@ export default function DashboardPage() {
                 <TrendingUp className='w-5 h-5 text-primary-500' />
               </div>
               <span className='text-xs font-medium text-dark-800'>Investments</span>
-              <span className='text-xs text-green-500'>+12.5%</span>
+              {/* Rendimento real calculado a partir dos investimentos ativos */}
+              <span className={`text-xs ${
+                investmentGain === null
+                  ? 'text-gray-400'
+                  : investmentGain >= 0
+                    ? 'text-green-500'
+                    : 'text-red-500'
+              }`}>
+                {investmentGain === null
+                  ? 'No investments'
+                  : `${investmentGain >= 0 ? '+' : ''}${investmentGain.toFixed(2)}%`}
+              </span>
             </button>
           </div>
         </div>
