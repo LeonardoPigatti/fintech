@@ -1,4 +1,4 @@
-# 🏦 FinBank — Digital Banking Platform
+# 🏦 Vaultly — Digital Banking Platform
 
 <div align="center">
 
